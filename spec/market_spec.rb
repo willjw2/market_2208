@@ -2,6 +2,7 @@ require 'rspec'
 require './lib/vendor'
 require './lib/item'
 require './lib/market'
+require 'date'
 
 RSpec.describe Market do
   before(:each) do
@@ -27,6 +28,9 @@ RSpec.describe Market do
       market = Market.new("South Pearl Street Farmers Market")
       expect(market.name).to eq("South Pearl Street Farmers Market")
       expect(market.vendors).to eq([])
+      #using a stub to test a past date
+      allow(market).to receive(:date).and_return("24/02/2020")
+      expect(market.date).to eq("24/02/2020")
     end
   end
   describe '#add_vendor' do
@@ -103,6 +107,29 @@ RSpec.describe Market do
       market.add_vendor(@vendor2)
       market.add_vendor(@vendor3)
       expect(market.overstocked_items).to eq([@item1])
+    end
+  end
+  describe '#sell' do
+    it "can tell when an item quantity can't be sold" do
+      item5 = Item.new({name: 'Onion', price: '$0.25'})
+      market = Market.new("South Pearl Street Farmers Market")
+      market.add_vendor(@vendor1)
+      market.add_vendor(@vendor2)
+      market.add_vendor(@vendor3)
+      expect(market.sell(@item1, 200)).to eq(false)
+      expect(market.sell(@item5, 1)).to eq(false)
+    end
+    it "can sell an item" do
+      item5 = Item.new({name: 'Onion', price: '$0.25'})
+      market = Market.new("South Pearl Street Farmers Market")
+      market.add_vendor(@vendor1)
+      market.add_vendor(@vendor2)
+      market.add_vendor(@vendor3)
+      # expect(market.sell(@item4, 5)).to eq(true)
+      # expect(@vendor2.check_stock(@item4)).to eq(45)
+      expect(market.sell(@item1, 40)).to eq(true)
+      expect(@vendor1.check_stock(@item1)).to eq(0)
+      expect(@vendor3.check_stock(@item1)).to eq(60)
     end
   end
 end
